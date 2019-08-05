@@ -21,7 +21,7 @@ func newPullCommand() *cobra.Command {
 	pull := &pullCommand{}
 
 	cmd := &cobra.Command{
-		Use: "pull [OPTIONS] NAME[:TAG|@DIGEST]",
+		Use:                   "pull [OPTIONS] NAME[:TAG|@DIGEST]",
 		DisableFlagsInUseLine: true,
 		SilenceUsage:          true,
 		Short:                 pullUsageShortHelp,

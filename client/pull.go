@@ -65,10 +65,10 @@ func (c *Client) Pull(ctx context.Context, image string, insecure bool) (*Listed
 				InsecureSkipVerify: true,
 			},
 		}
-		
+
 		return docker.ResolverOptions{
-			Client:    &http.Client{
-				Transport: transport
+			Client: &http.Client{
+				Transport: transport,
 			},
 			PlainHTTP: insecure,
 		}

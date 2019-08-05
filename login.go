@@ -30,7 +30,7 @@ func newLoginCommand() *cobra.Command {
 	login := &loginCommand{}
 
 	cmd := &cobra.Command{
-		Use: "login [OPTIONS] [SERVER]",
+		Use:                   "login [OPTIONS] [SERVER]",
 		DisableFlagsInUseLine: true,
 		SilenceUsage:          true,
 		Short:                 loginUsageShortHelp,
