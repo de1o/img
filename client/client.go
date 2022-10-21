@@ -58,3 +58,26 @@ func New(root, backend string, localDirs map[string]string) (*Client, error) {
 // This used to shut down the FUSE server but since that was removed
 // it is basically a no-op now.
 func (c *Client) Close() {}
+
+func configureRegistries(scheme string) docker.RegistryHosts {
+	return func(host string) ([]docker.RegistryHost, error) {
+		config := docker.RegistryHost{
+			Client:       http.DefaultClient,
+			Authorizer:   nil,
+			Host:         host,
+			Scheme:       scheme,
+			Path:         "/v2",
+			Capabilities: docker.HostCapabilityPull | docker.HostCapabilityResolve | docker.HostCapabilityPush,
+		}
+
+		if config.Client == nil {
+			config.Client = http.DefaultClient
+		}
+
+		if host == "docker.io" {
+			config.Host = "registry-1.docker.io"
+		}
+
+		return []docker.RegistryHost{config}, nil
+	}
+}

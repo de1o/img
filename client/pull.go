@@ -53,6 +53,10 @@ func (c *Client) Pull(ctx context.Context, image string, insecure bool) (*Listed
 	if err != nil {
 		return nil, err
 	}
+	registriesHosts := opt.RegistryHosts
+	if insecure {
+		registriesHosts = configureRegistries("http")
+	}
 
 	// Create the source for the pull.
 	srcOpt := containerimage.SourceOpt{
@@ -61,23 +65,10 @@ func (c *Client) Pull(ctx context.Context, image string, insecure bool) (*Listed
 		Applier:       opt.Applier,
 		CacheAccessor: cm,
 		ImageStore:    opt.ImageStore,
-		RegistryHosts: opt.RegistryHosts,
+		RegistryHosts: registriesHosts,
 		LeaseManager:  opt.LeaseManager,
 	}
-	//srcOpt.ResolverOpt = func(string) docker.ResolverOptions {
-	//	transport := &http.Transport{
-	//		TLSClientConfig: &tls.Config{
-	//			InsecureSkipVerify: true,
-	//		},
-	//	}
-	//
-	//	return docker.ResolverOptions{
-	//		Client: &http.Client{
-	//			Transport: transport,
-	//		},
-	//		PlainHTTP: insecure,
-	//	}
-	//}
+
 	src, err := containerimage.NewSource(srcOpt)
 	if err != nil {
 		return nil, err
