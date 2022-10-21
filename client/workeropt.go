@@ -33,11 +33,11 @@ import (
 )
 
 func (c *Client) createWorkerOpt(withExecutor bool) (opt base.WorkerOpt, err error) {
-	return c.createWorkerOptInner(withExecutor, false)
+	return c.createWorkerOptInner(withExecutor, false, 0)
 }
 
 // createWorkerOpt creates a base.WorkerOpt to be used for a new worker.
-func (c *Client) createWorkerOptInner(withExecutor bool, insecure bool) (opt base.WorkerOpt, err error) {
+func (c *Client) createWorkerOptInner(withExecutor bool, insecure bool, unprivilegedFlag int) (opt base.WorkerOpt, err error) {
 	// Create the metadata store.
 	md, err := metadata.NewStore(filepath.Join(c.root, "metadata.db"))
 	if err != nil {
@@ -45,7 +45,14 @@ func (c *Client) createWorkerOptInner(withExecutor bool, insecure bool) (opt bas
 	}
 
 	snapshotRoot := filepath.Join(c.root, "snapshots")
-	unprivileged := system.GetParentNSeuid() != 0
+	var unprivileged bool
+	if unprivilegedFlag == 0 {
+		unprivileged = system.GetParentNSeuid() != 0
+	} else if unprivilegedFlag == 1 {
+		unprivileged = true
+	} else {
+		unprivileged = false
+	}
 
 	// Create the snapshotter.
 	var (

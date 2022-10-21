@@ -11,11 +11,11 @@ import (
 )
 
 // Solve calls Solve on the controller.
-func (c *Client) Solve(ctx context.Context, req *controlapi.SolveRequest, ch chan *controlapi.StatusResponse, insecure bool) error {
+func (c *Client) Solve(ctx context.Context, req *controlapi.SolveRequest, ch chan *controlapi.StatusResponse, insecure bool, unprivilegedFlag int) error {
 	defer close(ch)
 	if c.controller == nil {
 		// Create the controller.
-		if err := c.createController(insecure); err != nil {
+		if err := c.createController(insecure, unprivilegedFlag); err != nil {
 			return err
 		}
 	}

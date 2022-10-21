@@ -11,7 +11,7 @@ import (
 func (c *Client) DiskUsage(ctx context.Context, req *controlapi.DiskUsageRequest) (*controlapi.DiskUsageResponse, error) {
 	if c.controller == nil {
 		// Create the controller.
-		if err := c.createController(false); err != nil {
+		if err := c.createController(false, 0); err != nil {
 			return nil, err
 		}
 	}

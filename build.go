@@ -81,6 +81,7 @@ func newBuildCommand() *cobra.Command {
 	fs.StringVarP(&build.output, "output", "o", "", "BuildKit output specification (e.g. type=tar,dest=build.tar)")
 	fs.Var(build.cacheFrom, "cache-from", "Buildkit import-cache or Buildx cache-from specification")
 	fs.Var(build.cacheTo, "cache-to", "Buildx cache-to specification")
+	fs.IntVar(&build.unprivilegedFlag, "unprivileged", 0, "Run as unprivileged user (0=auto, 1=always, 2=never)")
 	return cmd
 }
 
@@ -98,10 +99,11 @@ type buildCommand struct {
 	cacheTo        *listValue
 	bkoutput       bkclient.ExportEntry
 
-	contextDir string
-	noConsole  bool
-	insecure   bool
-	noCache    bool
+	contextDir       string
+	noConsole        bool
+	insecure         bool
+	unprivilegedFlag int
+	noCache          bool
 }
 
 // validateTag checks if the given image name can be resolved, and ensures the latest tag is added if it is missing.
@@ -363,7 +365,7 @@ func (cmd *buildCommand) Run(args []string) (err error) {
 				Exports: cacheToList,
 				Imports: cacheFromList,
 			},
-		}, ch, cmd.insecure)
+		}, ch, cmd.insecure, cmd.unprivilegedFlag)
 	})
 	eg.Go(func() error {
 		return showProgress(ch, cmd.noConsole)

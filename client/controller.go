@@ -19,13 +19,13 @@ import (
 	"github.com/moby/buildkit/worker/base"
 )
 
-func (c *Client) createController(insecure bool) error {
+func (c *Client) createController(insecure bool, unprivilegedFlag int) error {
 	sm, err := c.getSessionManager()
 	if err != nil {
 		return fmt.Errorf("creating session manager failed: %v", err)
 	}
 	// Create the worker opts.
-	opt, err := c.createWorkerOptInner(true, insecure)
+	opt, err := c.createWorkerOptInner(true, insecure, unprivilegedFlag)
 	if err != nil {
 		return fmt.Errorf("creating worker opt failed: %v", err)
 	}
