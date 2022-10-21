@@ -1,6 +1,8 @@
 package client
 
 import (
+	"github.com/containerd/containerd/remotes/docker"
+	"net/http"
 	"os"
 	"path/filepath"
 
