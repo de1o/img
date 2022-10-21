@@ -33,8 +33,12 @@ import (
 	bolt "go.etcd.io/bbolt"
 )
 
-// createWorkerOpt creates a base.WorkerOpt to be used for a new worker.
 func (c *Client) createWorkerOpt(withExecutor bool) (opt base.WorkerOpt, err error) {
+	return c.createWorkerOptInner(withExecutor, false)
+}
+
+// createWorkerOpt creates a base.WorkerOpt to be used for a new worker.
+func (c *Client) createWorkerOptInner(withExecutor bool, insecure bool) (opt base.WorkerOpt, err error) {
 	// Create the metadata store.
 	md, err := metadata.NewStore(filepath.Join(c.root, "metadata.db"))
 	if err != nil {
@@ -124,6 +128,11 @@ func (c *Client) createWorkerOpt(withExecutor bool) (opt base.WorkerOpt, err err
 		supportedPlatforms = append(supportedPlatforms, platforms.Normalize(parsed))
 	}
 
+	registriesHosts := opt.RegistryHosts
+	if insecure {
+		registriesHosts = configureRegistries("http")
+	}
+
 	opt = base.WorkerOpt{
 		ID:             id,
 		Labels:         xlabels,
@@ -135,7 +144,7 @@ func (c *Client) createWorkerOpt(withExecutor bool) (opt base.WorkerOpt, err err
 		Differ:         walking.NewWalkingDiff(contentStore),
 		ImageStore:     imageStore,
 		Platforms:      supportedPlatforms,
-		RegistryHosts:  docker.ConfigureDefaultRegistries(),
+		RegistryHosts:  registriesHosts,
 		LeaseManager:   leaseutil.WithNamespace(ctdmetadata.NewLeaseManager(mdb), "buildkit"),
 		GarbageCollect: mdb.GarbageCollect,
 	}

@@ -76,6 +76,7 @@ func newBuildCommand() *cobra.Command {
 	fs.Var(build.secrets, "secret", "Secret value exposed to the build. Format id=secretname,src=filepath")
 	fs.Var(build.ssh, "ssh", "Allow forwarding SSH agent to the builder. Format default|<id>[=<socket>|<key>[,<key>]]")
 	fs.BoolVar(&build.noConsole, "no-console", false, "Use non-console progress UI")
+	fs.BoolVar(&build.insecure, "insecure-registry", false, "Allow insecure source image registry")
 	fs.BoolVar(&build.noCache, "no-cache", false, "Do not use cache when building the image")
 	fs.StringVarP(&build.output, "output", "o", "", "BuildKit output specification (e.g. type=tar,dest=build.tar)")
 	fs.Var(build.cacheFrom, "cache-from", "Buildkit import-cache or Buildx cache-from specification")
@@ -99,6 +100,7 @@ type buildCommand struct {
 
 	contextDir string
 	noConsole  bool
+	insecure   bool
 	noCache    bool
 }
 
@@ -361,7 +363,7 @@ func (cmd *buildCommand) Run(args []string) (err error) {
 				Exports: cacheToList,
 				Imports: cacheFromList,
 			},
-		}, ch)
+		}, ch, cmd.insecure)
 	})
 	eg.Go(func() error {
 		return showProgress(ch, cmd.noConsole)
