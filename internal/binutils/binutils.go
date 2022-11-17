@@ -47,7 +47,7 @@ func GetRuncVersion() (gorunc.Version, error) {
 
 	v, err := runcContext.Version(context.Background())
 	if err != nil {
-		return gorunc.Version{}, fmt.Errorf("unable to check runc version")
+		return gorunc.Version{}, fmt.Errorf("unable to check runc version %s", err)
 	}
 
 	log.WithFields(log.Fields{"version": v.Runc, "commit": v.Commit, "spec": v.Spec}).Debug("runc found")
