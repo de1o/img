@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 	"fmt"
+	"github.com/containerd/containerd/remotes/docker"
 	"os/exec"
 	"path/filepath"
 	"syscall"
@@ -134,7 +135,7 @@ func (c *Client) createWorkerOptInner(withExecutor bool, insecure bool, unprivil
 		supportedPlatforms = append(supportedPlatforms, platforms.Normalize(parsed))
 	}
 
-	registriesHosts := opt.RegistryHosts
+	registriesHosts := docker.ConfigureDefaultRegistries()
 	if insecure {
 		registriesHosts = configureRegistries("http")
 	}
