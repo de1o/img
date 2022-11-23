@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 	"fmt"
+	"github.com/pkg/errors"
 	"strings"
 
 	"github.com/containerd/containerd/remotes/docker"
@@ -39,11 +40,11 @@ func (c *Client) Push(ctx context.Context, image string, insecure bool) error {
 
 	if err := push.Push(ctx, sm, opt.ContentStore, imgObj.Target.Digest, image, insecure, opt.RegistryHosts, false); err != nil {
 		if !isErrHTTPResponseToHTTPSClient(err) {
-			return err
+			return errors.Wrapf(err, "not http response to https client")
 		}
 
 		if !insecure {
-			return err
+			return errors.Wrapf(err, "push failed, try --insecure")
 		}
 
 		return push.Push(ctx, sm, opt.ContentStore, imgObj.Target.Digest, image, insecure, registryHostsWithPlainHTTP(), false)
@@ -56,10 +57,12 @@ func isErrHTTPResponseToHTTPSClient(err error) bool {
 	// https://github.com/golang/go/issues/44855
 
 	const unexposed = "server gave HTTP response to HTTPS client"
+	fmt.Printf("isErrHTTPResponseToHTTPSClient: %v", err)
 	return strings.Contains(err.Error(), unexposed)
 }
 
 func registryHostsWithPlainHTTP() docker.RegistryHosts {
+	fmt.Printf("registry hosts with plain HTTP...")
 	return docker.ConfigureDefaultRegistries(docker.WithPlainHTTP(func(_ string) (bool, error) {
 		return true, nil
 	}))
