@@ -58,12 +58,11 @@ func isErrHTTPResponseToHTTPSClient(err error) bool {
 
 	const unexposed = "server gave HTTP response to HTTPS client"
 	const refuesd = "connection refused"
-	fmt.Printf("isErrHTTPResponseToHTTPSClient: %v", err)
 	return strings.Contains(err.Error(), unexposed) || strings.Contains(err.Error(), refuesd)
 }
 
 func registryHostsWithPlainHTTP() docker.RegistryHosts {
-	fmt.Printf("registry hosts with plain HTTP...")
+	fmt.Printf("registry hosts with plain HTTP...\n")
 	return docker.ConfigureDefaultRegistries(docker.WithPlainHTTP(func(_ string) (bool, error) {
 		return true, nil
 	}))
