@@ -57,8 +57,9 @@ func isErrHTTPResponseToHTTPSClient(err error) bool {
 	// https://github.com/golang/go/issues/44855
 
 	const unexposed = "server gave HTTP response to HTTPS client"
+	const refuesd = "connection refused"
 	fmt.Printf("isErrHTTPResponseToHTTPSClient: %v", err)
-	return strings.Contains(err.Error(), unexposed)
+	return strings.Contains(err.Error(), unexposed) || strings.Contains(err.Error(), refuesd)
 }
 
 func registryHostsWithPlainHTTP() docker.RegistryHosts {
