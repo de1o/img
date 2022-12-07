@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/containerd/containerd/remotes/docker"
+	"github.com/opencontainers/runc/libcontainer/user"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"syscall"
@@ -28,10 +30,25 @@ import (
 	"github.com/moby/buildkit/util/network/netproviders"
 	"github.com/moby/buildkit/worker/base"
 	specs "github.com/opencontainers/image-spec/specs-go/v1"
-	"github.com/opencontainers/runc/libcontainer/system"
 	"github.com/sirupsen/logrus"
 	bolt "go.etcd.io/bbolt"
 )
+
+// GetParentNSeuid returns the euid within the parent user namespace
+func GetParentNSeuid() int64 {
+	euid := int64(os.Geteuid())
+	uidmap, err := user.CurrentProcessUIDMap()
+	if err != nil {
+		// This kernel-provided file only exists if user namespaces are supported
+		return euid
+	}
+	for _, um := range uidmap {
+		if um.ID <= euid && euid <= um.ID+um.Count-1 {
+			return um.ParentID + euid - um.ID
+		}
+	}
+	return euid
+}
 
 func (c *Client) createWorkerOpt(withExecutor bool) (opt base.WorkerOpt, err error) {
 	return c.createWorkerOptInner(withExecutor, false, 0)
@@ -48,7 +65,7 @@ func (c *Client) createWorkerOptInner(withExecutor bool, insecure bool, unprivil
 	snapshotRoot := filepath.Join(c.root, "snapshots")
 	var unprivileged bool
 	if unprivilegedFlag == 0 {
-		unprivileged = system.GetParentNSeuid() != 0
+		unprivileged = GetParentNSeuid() != 0
 	} else if unprivilegedFlag == 1 {
 		unprivileged = true
 	} else {
