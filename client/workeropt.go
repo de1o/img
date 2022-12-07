@@ -148,11 +148,7 @@ func (c *Client) createWorkerOptInner(withExecutor bool, insecure bool, unprivil
 
 	var supportedPlatforms []specs.Platform
 	for _, p := range archutil.SupportedPlatforms(false) {
-		parsed, err := platforms.Parse(p)
-		if err != nil {
-			return opt, err
-		}
-		supportedPlatforms = append(supportedPlatforms, platforms.Normalize(parsed))
+		supportedPlatforms = append(supportedPlatforms, platforms.Normalize(p))
 	}
 
 	registriesHosts := docker.ConfigureDefaultRegistries()
