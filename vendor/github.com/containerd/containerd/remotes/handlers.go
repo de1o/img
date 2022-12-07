@@ -95,6 +95,7 @@ func FetchHandler(ingester content.Ingester, fetcher Fetcher) images.HandlerFunc
 			"mediatype": desc.MediaType,
 			"size":      desc.Size,
 		}))
+		log.G(ctx).Debug("FetchHandler")
 
 		switch desc.MediaType {
 		case images.MediaTypeDockerSchema1Manifest:
@@ -109,6 +110,7 @@ func FetchHandler(ingester content.Ingester, fetcher Fetcher) images.HandlerFunc
 func fetch(ctx context.Context, ingester content.Ingester, fetcher Fetcher, desc ocispec.Descriptor) error {
 	log.G(ctx).Debug("fetch")
 
+	log.G(ctx).Debug("1111: %+v, %+v, %+v", ingester, fetcher, desc)
 	cw, err := content.OpenWriter(ctx, ingester, content.WithRef(MakeRefKey(ctx, desc)), content.WithDescriptor(desc))
 	if err != nil {
 		if errdefs.IsAlreadyExists(err) {

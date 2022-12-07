@@ -1,19 +1,19 @@
 package main
 
 import (
+	"github.com/genuinetools/img/client"
 	"os"
 	"os/exec"
 	"os/signal"
 	"syscall"
 
-	"github.com/opencontainers/runc/libcontainer/system"
 	"github.com/sirupsen/logrus"
 )
 
 func reexec() {
 	// TODO(jessfraz): This is a hack to re-exec our selves and wait for the
 	// process since it was not exiting correctly with the constructor.
-	if len(os.Getenv("IMG_RUNNING_TESTS")) <= 0 && len(os.Getenv("IMG_DO_UNSHARE")) <= 0 && system.GetParentNSeuid() != 0 {
+	if len(os.Getenv("IMG_RUNNING_TESTS")) <= 0 && len(os.Getenv("IMG_DO_UNSHARE")) <= 0 && client.GetParentNSeuid() != 0 {
 		var (
 			pgid int
 			err  error

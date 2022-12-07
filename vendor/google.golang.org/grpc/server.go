@@ -1708,6 +1708,7 @@ func (s *Server) handleStream(t transport.ServerTransport, stream *transport.Str
 	method := sm[pos+1:]
 
 	srv, knownService := s.services[service]
+	fmt.Printf("s.services %+v", s.services)
 	if knownService {
 		if md, ok := srv.methods[method]; ok {
 			s.processUnaryRPC(t, stream, srv, md, trInfo)

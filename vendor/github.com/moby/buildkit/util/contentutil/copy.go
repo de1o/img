@@ -5,6 +5,7 @@ import (
 	"io"
 	"sync"
 
+	"github.com/containerd/containerd/log"
 	"github.com/containerd/containerd/content"
 	"github.com/containerd/containerd/images"
 	"github.com/moby/buildkit/util/resolver/limited"
@@ -14,6 +15,7 @@ import (
 )
 
 func Copy(ctx context.Context, ingester content.Ingester, provider content.Provider, desc ocispecs.Descriptor, ref string, logger func([]byte)) error {
+	log.G(ctx).Debug("Copy...")
 	if _, err := retryhandler.New(limited.FetchHandler(ingester, &localFetcher{provider}, ref), logger)(ctx, desc); err != nil {
 		return err
 	}
@@ -74,6 +76,7 @@ func CopyChain(ctx context.Context, ingester content.Ingester, provider content.
 			return nil, nil
 		}
 	})
+	log.G(ctx).Debug("CopyChain...")
 	handlers := []images.Handler{
 		images.ChildrenHandler(provider),
 		filterHandler,
