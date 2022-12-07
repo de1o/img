@@ -2,7 +2,6 @@ package oci
 
 import (
 	"context"
-	"errors"
 	"os"
 	"strconv"
 	"strings"
@@ -11,10 +10,17 @@ import (
 	containerdoci "github.com/containerd/containerd/oci"
 	"github.com/containerd/continuity/fs"
 	"github.com/opencontainers/runc/libcontainer/user"
-	"github.com/opencontainers/runtime-spec/specs-go"
+	specs "github.com/opencontainers/runtime-spec/specs-go"
+	"github.com/pkg/errors"
 )
 
-func GetUser(ctx context.Context, root, username string) (uint32, uint32, []uint32, error) {
+func GetUser(root, username string) (uint32, uint32, []uint32, error) {
+	var isDefault bool
+	if username == "" {
+		username = "0"
+		isDefault = true
+	}
+
 	// fast path from uid/gid
 	if uid, gid, err := ParseUIDGID(username); err == nil {
 		return uid, gid, nil, nil
@@ -31,6 +37,9 @@ func GetUser(ctx context.Context, root, username string) (uint32, uint32, []uint
 
 	execUser, err := user.GetExecUser(username, nil, passwdFile, groupFile)
 	if err != nil {
+		if isDefault {
+			return 0, 0, nil, nil
+		}
 		return 0, 0, nil, err
 	}
 	var sgids []uint32

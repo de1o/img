@@ -7,7 +7,6 @@ import (
 	"github.com/moby/buildkit/util/network"
 	"github.com/moby/buildkit/util/network/cniprovider"
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 )
 
 type Opt struct {
@@ -15,36 +14,48 @@ type Opt struct {
 	Mode string
 }
 
-// Providers returns the network provider set
-func Providers(opt Opt) (map[pb.NetMode]network.Provider, error) {
+// Providers returns the network provider set.
+// When opt.Mode is "auto" or "", resolvedMode is set to either "cni" or "host".
+func Providers(opt Opt) (providers map[pb.NetMode]network.Provider, resolvedMode string, err error) {
 	var defaultProvider network.Provider
 	switch opt.Mode {
 	case "cni":
 		cniProvider, err := cniprovider.New(opt.CNI)
 		if err != nil {
-			return nil, err
+			return nil, resolvedMode, err
 		}
 		defaultProvider = cniProvider
+		resolvedMode = opt.Mode
 	case "host":
-		defaultProvider = network.NewHostProvider()
+		hostProvider, ok := getHostProvider()
+		if !ok {
+			return nil, resolvedMode, errors.New("no host network support on this platform")
+		}
+		defaultProvider = hostProvider
+		resolvedMode = opt.Mode
 	case "auto", "":
 		if _, err := os.Stat(opt.CNI.ConfigPath); err == nil {
 			cniProvider, err := cniprovider.New(opt.CNI)
 			if err != nil {
-				return nil, err
+				return nil, resolvedMode, err
 			}
 			defaultProvider = cniProvider
+			resolvedMode = "cni"
 		} else {
-			logrus.Warnf("using host network as the default")
-			defaultProvider = network.NewHostProvider()
+			defaultProvider, resolvedMode = getFallback()
 		}
 	default:
-		return nil, errors.Errorf("invalid network mode: %q", opt.Mode)
+		return nil, resolvedMode, errors.Errorf("invalid network mode: %q", opt.Mode)
 	}
 
-	return map[pb.NetMode]network.Provider{
+	providers = map[pb.NetMode]network.Provider{
 		pb.NetMode_UNSET: defaultProvider,
-		pb.NetMode_HOST:  network.NewHostProvider(),
 		pb.NetMode_NONE:  network.NewNoneProvider(),
-	}, nil
+	}
+
+	if hostProvider, ok := getHostProvider(); ok {
+		providers[pb.NetMode_HOST] = hostProvider
+	}
+
+	return providers, resolvedMode, nil
 }

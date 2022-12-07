@@ -1,3 +1,6 @@
+//go:build !windows
+// +build !windows
+
 package network
 
 import (
@@ -19,8 +22,8 @@ func (h *host) New() (Namespace, error) {
 type hostNS struct {
 }
 
-func (h *hostNS) Set(s *specs.Spec) {
-	oci.WithHostNamespace(specs.NetworkNamespace)(nil, nil, nil, s)
+func (h *hostNS) Set(s *specs.Spec) error {
+	return oci.WithHostNamespace(specs.NetworkNamespace)(nil, nil, nil, s)
 }
 
 func (h *hostNS) Close() error {

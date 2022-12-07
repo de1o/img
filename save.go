@@ -8,10 +8,11 @@ import (
 	"os"
 
 	"github.com/containerd/containerd/namespaces"
-	"github.com/docker/docker/pkg/term"
 	"github.com/genuinetools/img/client"
 	"github.com/moby/buildkit/identity"
 	"github.com/moby/buildkit/session"
+	//"github.com/docker/docker/pkg/term"
+	"github.com/moby/term"
 )
 
 // TODO(AkihiroSuda): support OCI archive

@@ -23,7 +23,7 @@ import (
 	executoroci "github.com/moby/buildkit/executor/oci"
 	"github.com/moby/buildkit/executor/runcexecutor"
 	containerdsnapshot "github.com/moby/buildkit/snapshot/containerd"
-	"github.com/moby/buildkit/util/binfmt_misc"
+	"github.com/moby/buildkit/util/archutil"
 	"github.com/moby/buildkit/util/leaseutil"
 	"github.com/moby/buildkit/util/network/netproviders"
 	"github.com/moby/buildkit/worker/base"
@@ -127,7 +127,7 @@ func (c *Client) createWorkerOptInner(withExecutor bool, insecure bool, unprivil
 	xlabels := base.Labels("oci", c.backend)
 
 	var supportedPlatforms []specs.Platform
-	for _, p := range binfmt_misc.SupportedPlatforms(false) {
+	for _, p := range archutil.SupportedPlatforms(false) {
 		parsed, err := platforms.Parse(p)
 		if err != nil {
 			return opt, err

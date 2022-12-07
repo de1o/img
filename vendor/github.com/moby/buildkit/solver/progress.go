@@ -5,14 +5,15 @@ import (
 	"io"
 	"time"
 
+	"github.com/moby/buildkit/util/bklog"
+
 	"github.com/moby/buildkit/client"
 	"github.com/moby/buildkit/util/progress"
 	digest "github.com/opencontainers/go-digest"
-	"github.com/sirupsen/logrus"
 )
 
 func (j *Job) Status(ctx context.Context, ch chan *client.SolveStatus) error {
-	vs := &vertexStream{cache: map[digest.Digest]*client.Vertex{}}
+	vs := &vertexStream{cache: map[digest.Digest]*client.Vertex{}, wasCached: make(map[digest.Digest]struct{})}
 	pr := j.pr.Reader(ctx)
 	defer func() {
 		if enc := vs.encore(); len(enc) > 0 {
@@ -38,7 +39,7 @@ func (j *Job) Status(ctx context.Context, ch chan *client.SolveStatus) error {
 			case progress.Status:
 				vtx, ok := p.Meta("vertex")
 				if !ok {
-					logrus.Warnf("progress %s status without vertex info", p.ID)
+					bklog.G(ctx).Warnf("progress %s status without vertex info", p.ID)
 					continue
 				}
 				vs := &client.VertexStatus{
@@ -55,12 +56,20 @@ func (j *Job) Status(ctx context.Context, ch chan *client.SolveStatus) error {
 			case client.VertexLog:
 				vtx, ok := p.Meta("vertex")
 				if !ok {
-					logrus.Warnf("progress %s log without vertex info", p.ID)
+					bklog.G(ctx).Warnf("progress %s log without vertex info", p.ID)
 					continue
 				}
 				v.Vertex = vtx.(digest.Digest)
 				v.Timestamp = p.Timestamp
 				ss.Logs = append(ss.Logs, &v)
+			case client.VertexWarning:
+				vtx, ok := p.Meta("vertex")
+				if !ok {
+					bklog.G(ctx).Warnf("progress %s warning without vertex info", p.ID)
+					continue
+				}
+				v.Vertex = vtx.(digest.Digest)
+				ss.Warnings = append(ss.Warnings, &v)
 			}
 		}
 		select {
@@ -72,7 +81,8 @@ func (j *Job) Status(ctx context.Context, ch chan *client.SolveStatus) error {
 }
 
 type vertexStream struct {
-	cache map[digest.Digest]*client.Vertex
+	cache     map[digest.Digest]*client.Vertex
+	wasCached map[digest.Digest]struct{}
 }
 
 func (vs *vertexStream) append(v client.Vertex) []*client.Vertex {
@@ -91,8 +101,23 @@ func (vs *vertexStream) append(v client.Vertex) []*client.Vertex {
 			}
 		}
 	}
+	if v.Cached {
+		vs.markCached(v.Digest)
+	}
+
 	vcopy := v
 	return append(out, &vcopy)
+}
+
+func (vs *vertexStream) markCached(dgst digest.Digest) {
+	if v, ok := vs.cache[dgst]; ok {
+		if _, ok := vs.wasCached[dgst]; !ok {
+			for _, inp := range v.Inputs {
+				vs.markCached(inp)
+			}
+		}
+		vs.wasCached[dgst] = struct{}{}
+	}
 }
 
 func (vs *vertexStream) encore() []*client.Vertex {
@@ -101,7 +126,9 @@ func (vs *vertexStream) encore() []*client.Vertex {
 		if v.Started != nil && v.Completed == nil {
 			now := time.Now()
 			v.Completed = &now
-			v.Error = context.Canceled.Error()
+			if _, ok := vs.wasCached[v.Digest]; !ok && v.Error == "" {
+				v.Error = context.Canceled.Error()
+			}
 			out = append(out, v)
 		}
 	}

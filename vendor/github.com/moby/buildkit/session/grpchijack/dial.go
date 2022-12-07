@@ -16,11 +16,8 @@ import (
 
 func Dialer(api controlapi.ControlClient) session.Dialer {
 	return func(ctx context.Context, proto string, meta map[string][]string) (net.Conn, error) {
-
 		meta = lowerHeaders(meta)
-
 		md := metadata.MD(meta)
-
 		ctx = metadata.NewOutgoingContext(ctx, md)
 
 		stream, err := api.Session(ctx)
@@ -33,21 +30,26 @@ func Dialer(api controlapi.ControlClient) session.Dialer {
 	}
 }
 
-func streamToConn(stream grpc.Stream) (net.Conn, <-chan struct{}) {
+type stream interface {
+	Context() context.Context
+	SendMsg(m interface{}) error
+	RecvMsg(m interface{}) error
+}
+
+func streamToConn(stream stream) (net.Conn, <-chan struct{}) {
 	closeCh := make(chan struct{})
 	c := &conn{stream: stream, buf: make([]byte, 32*1<<10), closeCh: closeCh}
 	return c, closeCh
 }
 
 type conn struct {
-	stream  grpc.Stream
+	stream  stream
 	buf     []byte
 	lastBuf []byte
 
 	closedOnce sync.Once
 	readMu     sync.Mutex
 	writeMu    sync.Mutex
-	err        error
 	closeCh    chan struct{}
 }
 
@@ -121,7 +123,6 @@ func (c *conn) Close() (err error) {
 			c.lastBuf = append(c.lastBuf, c.buf...)
 		}
 		c.readMu.Unlock()
-
 	})
 	return nil
 }

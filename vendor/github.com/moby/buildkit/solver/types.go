@@ -5,9 +5,11 @@ import (
 	"time"
 
 	"github.com/containerd/containerd/content"
+	"github.com/moby/buildkit/session"
 	"github.com/moby/buildkit/solver/pb"
+	"github.com/moby/buildkit/util/compression"
 	digest "github.com/opencontainers/go-digest"
-	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
+	ocispecs "github.com/opencontainers/image-spec/specs-go/v1"
 )
 
 // Vertex is a node in a build graph. It defines an interface for a
@@ -53,6 +55,7 @@ type VertexOptions struct {
 	Description  map[string]string // text values with no special meaning for solver
 	ExportCache  *bool
 	// WorkerConstraint
+	ProgressGroup *pb.ProgressGroup
 }
 
 // Result is an abstract return value for a solve
@@ -60,6 +63,7 @@ type Result interface {
 	ID() string
 	Release(context.Context) error
 	Sys() interface{}
+	Clone() Result
 }
 
 // CachedResult is a result connected with its cache key
@@ -72,6 +76,7 @@ type ResultProxy interface {
 	Result(context.Context) (CachedResult, error)
 	Release(context.Context) error
 	Definition() *pb.Definition
+	BuildSources() BuildSources
 }
 
 // CacheExportMode is the type for setting cache exporting modes
@@ -90,10 +95,15 @@ const (
 
 // CacheExportOpt defines options for exporting build cache
 type CacheExportOpt struct {
-	// Convert can convert a build result to transferable object
-	Convert func(context.Context, Result) (*Remote, error)
+	// ResolveRemotes can convert a build result to transferable objects
+	ResolveRemotes func(context.Context, Result) ([]*Remote, error)
 	// Mode defines a cache export algorithm
 	Mode CacheExportMode
+	// Session is the session group to client (for auth credentials etc)
+	Session session.Group
+	// CompressionOpt is an option to specify the compression of the object to load.
+	// If specified, all objects that meet the option will be cached.
+	CompressionOpt *compression.Config
 }
 
 // CacheExporter can export the artifacts of the build chain
@@ -118,7 +128,7 @@ type CacheExporterRecord interface {
 // from a content provider
 // TODO: add closer to keep referenced data from getting deleted
 type Remote struct {
-	Descriptors []ocispec.Descriptor
+	Descriptors []ocispecs.Descriptor
 	Provider    content.Provider
 }
 
@@ -131,6 +141,8 @@ type CacheLink struct {
 	Selector digest.Digest `json:",omitempty"`
 }
 
+type ReleaseFunc func()
+
 // Op defines how the solver can evaluate the properties of a vertex operation.
 // An op is executed in the worker, and is retrieved from the vertex by the
 // value of `vertex.Sys()`. The solver is configured with a resolve function to
@@ -138,13 +150,17 @@ type CacheLink struct {
 type Op interface {
 	// CacheMap returns structure describing how the operation is cached.
 	// Currently only roots are allowed to return multiple cache maps per op.
-	CacheMap(context.Context, int) (*CacheMap, bool, error)
+	CacheMap(context.Context, session.Group, int) (*CacheMap, bool, error)
 
 	// Exec runs an operation given results from previous operations.
-	Exec(ctx context.Context, inputs []Result) (outputs []Result, err error)
+	Exec(ctx context.Context, g session.Group, inputs []Result) (outputs []Result, err error)
+
+	// Acquire acquires the necessary resources to execute the `Op`.
+	Acquire(ctx context.Context) (release ReleaseFunc, err error)
 }
 
-type ResultBasedCacheFunc func(context.Context, Result) (digest.Digest, error)
+type ResultBasedCacheFunc func(context.Context, Result, session.Group) (digest.Digest, error)
+type PreprocessFunc func(context.Context, Result, session.Group) error
 
 // CacheMap is a description for calculating the cache key of an operation.
 type CacheMap struct {
@@ -170,8 +186,24 @@ type CacheMap struct {
 		// For example, in LLB this is invoked to calculate the cache key based on
 		// the checksum of file contents from input snapshots.
 		ComputeDigestFunc ResultBasedCacheFunc
+
+		// PreprocessFunc is a function that runs on an input before it is passed to op
+		PreprocessFunc PreprocessFunc
 	}
+
+	// Opts specifies generic options that will be passed to cache load calls if/when
+	// the key associated with this CacheMap is used to load a ref. It allows options
+	// such as oci descriptor content providers and progress writers to be passed to
+	// the cache. Opts should not have any impact on the computed cache key.
+	Opts CacheOpts
+
+	// BuildSources contains build dependencies that will be set from source
+	// operation.
+	BuildSources BuildSources
 }
+
+// BuildSources contains solved build dependencies.
+type BuildSources map[string]string
 
 // ExportableCacheKey is a cache key connected with an exporter that can export
 // a chain of cacherecords pointing to that key

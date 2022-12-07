@@ -1,3 +1,4 @@
+//go:build windows
 // +build windows
 
 package system
@@ -7,10 +8,6 @@ import (
 	"path/filepath"
 	"strings"
 )
-
-// DefaultPathEnv is deliberately empty on Windows as the default path will be set by
-// the container. Docker has no context of what the default path should be.
-const DefaultPathEnv = ""
 
 // CheckSystemDriveAndRemoveDriveLetter verifies and manipulates a Windows path.
 // This is used, for example, when validating a user provided path in docker cp.

@@ -4,6 +4,7 @@ import (
 	"context"
 	"io/ioutil"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -17,6 +18,13 @@ import (
 	"github.com/pkg/errors"
 	"github.com/tonistiigi/fsutil"
 	fstypes "github.com/tonistiigi/fsutil/types"
+)
+
+const (
+	// preferNondistLayersKey is an exporter option which can be used to mark a layer as non-distributable if the layer reference was
+	// already found to use a non-distributable media type.
+	// When this option is not set, the exporter will change the media type of the layer to a distributable one.
+	preferNondistLayersKey = "prefer-nondist-layers"
 )
 
 type Opt struct {
@@ -34,33 +42,34 @@ func New(opt Opt) (exporter.Exporter, error) {
 }
 
 func (e *localExporter) Resolve(ctx context.Context, opt map[string]string) (exporter.ExporterInstance, error) {
-	id := session.FromContext(ctx)
-	if id == "" {
-		return nil, errors.New("could not access local files without session")
+	li := &localExporterInstance{localExporter: e}
+
+	v, ok := opt[preferNondistLayersKey]
+	if ok {
+		b, err := strconv.ParseBool(v)
+		if err != nil {
+			return nil, errors.Wrapf(err, "non-bool value for %s: %s", preferNondistLayersKey, v)
+		}
+		li.preferNonDist = b
 	}
 
-	timeoutCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
-	defer cancel()
-
-	caller, err := e.opt.SessionManager.Get(timeoutCtx, id)
-	if err != nil {
-		return nil, err
-	}
-
-	li := &localExporterInstance{localExporter: e, caller: caller}
 	return li, nil
 }
 
 type localExporterInstance struct {
 	*localExporter
-	caller session.Caller
+	preferNonDist bool
 }
 
 func (e *localExporterInstance) Name() string {
 	return "exporting to client"
 }
 
-func (e *localExporterInstance) Export(ctx context.Context, inp exporter.Source) (map[string]string, error) {
+func (e *localExporterInstance) Config() exporter.Config {
+	return exporter.Config{}
+}
+
+func (e *localExporterInstance) Export(ctx context.Context, inp exporter.Source, sessionID string) (map[string]string, error) {
 	var defers []func()
 
 	defer func() {
@@ -80,7 +89,7 @@ func (e *localExporterInstance) Export(ctx context.Context, inp exporter.Source)
 			}
 			defers = append(defers, func() { os.RemoveAll(src) })
 		} else {
-			mount, err := ref.Mount(ctx, true)
+			mount, err := ref.Mount(ctx, true, session.NewGroup(sessionID))
 			if err != nil {
 				return nil, err
 			}
@@ -147,7 +156,15 @@ func (e *localExporterInstance) Export(ctx context.Context, inp exporter.Source)
 		fs = d.FS
 	}
 
-	w, err := filesync.CopyFileWriter(ctx, nil, e.caller)
+	timeoutCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	caller, err := e.opt.SessionManager.Get(timeoutCtx, sessionID, false)
+	if err != nil {
+		return nil, err
+	}
+
+	w, err := filesync.CopyFileWriter(ctx, nil, caller)
 	if err != nil {
 		return nil, err
 	}
@@ -160,7 +177,7 @@ func (e *localExporterInstance) Export(ctx context.Context, inp exporter.Source)
 }
 
 func oneOffProgress(ctx context.Context, id string) func(err error) error {
-	pw, _, _ := progress.FromContext(ctx)
+	pw, _, _ := progress.NewFromContext(ctx)
 	now := time.Now()
 	st := progress.Status{
 		Started: &now,

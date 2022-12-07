@@ -5,6 +5,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/moby/buildkit/session"
+	"github.com/moby/buildkit/util/compression"
 	"github.com/pkg/errors"
 )
 
@@ -297,7 +299,7 @@ func (s *inMemoryResultStore) Load(ctx context.Context, res CacheResult) (Result
 	return v.(Result), nil
 }
 
-func (s *inMemoryResultStore) LoadRemote(ctx context.Context, res CacheResult) (*Remote, error) {
+func (s *inMemoryResultStore) LoadRemotes(_ context.Context, _ CacheResult, _ *compression.Config, _ session.Group) ([]*Remote, error) {
 	return nil, nil
 }
 

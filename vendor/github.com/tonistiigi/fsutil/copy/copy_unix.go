@@ -1,3 +1,4 @@
+//go:build solaris || darwin || freebsd
 // +build solaris darwin freebsd
 
 package fs
@@ -10,7 +11,7 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-func getUidGid(fi os.FileInfo) (uid, gid int) {
+func getUIDGID(fi os.FileInfo) (uid, gid int) {
 	st := fi.Sys().(*syscall.Stat_t)
 	return int(st.Uid), int(st.Gid)
 }
@@ -18,8 +19,8 @@ func getUidGid(fi os.FileInfo) (uid, gid int) {
 func (c *copier) copyFileInfo(fi os.FileInfo, name string) error {
 	st := fi.Sys().(*syscall.Stat_t)
 	chown := c.chown
-	uid, gid := getUidGid(fi)
-	old := &User{Uid: uid, Gid: gid}
+	uid, gid := getUIDGID(fi)
+	old := &User{UID: uid, GID: gid}
 	if chown == nil {
 		chown = func(u *User) (*User, error) {
 			return u, nil
@@ -50,12 +51,4 @@ func (c *copier) copyFileInfo(fi os.FileInfo, name string) error {
 		}
 	}
 	return nil
-}
-
-func copyDevice(dst string, fi os.FileInfo) error {
-	st, ok := fi.Sys().(*syscall.Stat_t)
-	if !ok {
-		return errors.New("unsupported stat type")
-	}
-	return unix.Mknod(dst, uint32(fi.Mode()), int(st.Rdev))
 }

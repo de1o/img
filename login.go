@@ -15,9 +15,10 @@ import (
 	"github.com/docker/cli/cli/config/configfile"
 	"github.com/docker/cli/cli/config/types"
 	dockerapitypes "github.com/docker/docker/api/types"
-	"github.com/docker/docker/pkg/term"
 	"github.com/docker/docker/registry"
 	registryapi "github.com/genuinetools/reg/registry"
+	//"github.com/docker/docker/pkg/term"
+	"github.com/moby/term"
 	"github.com/sirupsen/logrus"
 )
 
