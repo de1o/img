@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/containerd/containerd/snapshots/overlay"
+	"github.com/containerd/containerd/snapshots/overlay/overlayutils"
 	fuseoverlayfs "github.com/containerd/fuse-overlayfs-snapshotter"
 	"github.com/genuinetools/img/types"
 	"github.com/moby/buildkit/control"
@@ -32,7 +32,7 @@ func New(root, backend string, localDirs map[string]string) (*Client, error) {
 
 	switch backend {
 	case types.AutoBackend:
-		if overlay.Supported(root) == nil {
+		if overlayutils.Supported(root) == nil {
 			backend = types.OverlayFSBackend
 		} else if fuseoverlayfs.Supported(root) == nil {
 			backend = types.FUSEOverlayFSBackend

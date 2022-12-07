@@ -71,7 +71,7 @@ func (cmd *pullCommand) Run(args []string) (err error) {
 	if err != nil {
 		return err
 	}
-	ctx = session.NewContext(ctx, sess.ID())
+	sg := session.NewGroup(sess.ID())
 	ctx = namespaces.WithNamespace(ctx, "buildkit")
 	eg, ctx := errgroup.WithContext(ctx)
 
@@ -81,7 +81,7 @@ func (cmd *pullCommand) Run(args []string) (err error) {
 	eg.Go(func() error {
 		defer sess.Close()
 		var err error
-		listedImage, err = c.Pull(ctx, cmd.image, cmd.insecure)
+		listedImage, err = c.Pull(ctx, cmd.image, cmd.insecure, sg, sess.ID())
 		return err
 	})
 	if err := eg.Wait(); err != nil {

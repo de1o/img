@@ -83,7 +83,7 @@ func (c *Client) createWorkerOptInner(withExecutor bool, insecure bool, unprivil
 			ProcessMode: processMode(),
 		}
 
-		np, err := netproviders.Providers(netproviders.Opt{Mode: "auto"})
+		np, _, err := netproviders.Providers(netproviders.Opt{Mode: "auto"})
 		if err != nil {
 			return base.WorkerOpt{}, err
 		}
@@ -124,7 +124,10 @@ func (c *Client) createWorkerOptInner(withExecutor bool, insecure bool, unprivil
 		return opt, err
 	}
 
-	xlabels := base.Labels("oci", c.backend)
+	// format xlabels as map
+	xlabels := map[string]string{
+		"oci": c.backend,
+	}
 
 	var supportedPlatforms []specs.Platform
 	for _, p := range archutil.SupportedPlatforms(false) {

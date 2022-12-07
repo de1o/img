@@ -1,6 +1,7 @@
 package client
 
 import (
+	"context"
 	"fmt"
 	"path/filepath"
 
@@ -30,8 +31,9 @@ func (c *Client) createController(insecure bool, unprivilegedFlag int) error {
 		return fmt.Errorf("creating worker opt failed: %v", err)
 	}
 
+	ctx := context.TODO()
 	// Create the new worker.
-	w, err := base.NewWorker(opt)
+	w, err := base.NewWorker(ctx, opt)
 	if err != nil {
 		return fmt.Errorf("creating worker failed: %v", err)
 	}

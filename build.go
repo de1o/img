@@ -28,7 +28,6 @@ import (
 	bkclient "github.com/moby/buildkit/client"
 	"github.com/moby/buildkit/cmd/buildctl/build"
 	"github.com/moby/buildkit/identity"
-	"github.com/moby/buildkit/session"
 	"github.com/moby/buildkit/session/filesync"
 	"github.com/moby/buildkit/session/sshforward/sshprovider"
 	"github.com/moby/buildkit/util/appcontext"
@@ -246,7 +245,6 @@ func (cmd *buildCommand) Run(args []string) (err error) {
 		return err
 	}
 	id := identity.NewID()
-	ctx = session.NewContext(ctx, sess.ID())
 	ctx = namespaces.WithNamespace(ctx, "buildkit")
 	eg, ctx := errgroup.WithContext(ctx)
 
@@ -570,5 +568,6 @@ func showProgress(ch chan *controlapi.StatusResponse, noConsole bool) error {
 			c = cf
 		}
 	}
-	return progressui.DisplaySolveStatus(context.TODO(), "", c, os.Stderr, displayCh)
+	_, e := progressui.DisplaySolveStatus(context.TODO(), "", c, os.Stderr, displayCh)
+	return e
 }

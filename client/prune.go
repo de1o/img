@@ -21,7 +21,7 @@ func (c *Client) Prune(ctx context.Context) ([]*controlapi.UsageRecord, error) {
 	}
 
 	// Create the new worker.
-	w, err := base.NewWorker(opt)
+	w, err := base.NewWorker(ctx, opt)
 	if err != nil {
 		return nil, fmt.Errorf("creating worker failed: %v", err)
 	}
@@ -46,7 +46,6 @@ func (c *Client) Prune(ctx context.Context) ([]*controlapi.UsageRecord, error) {
 				Mutable:     r.Mutable,
 				InUse:       r.InUse,
 				Size_:       r.Size,
-				Parent:      r.Parent,
 				UsageCount:  int64(r.UsageCount),
 				Description: r.Description,
 				CreatedAt:   r.CreatedAt,

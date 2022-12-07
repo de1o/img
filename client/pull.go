@@ -9,14 +9,15 @@ import (
 	"github.com/moby/buildkit/exporter"
 	imageexporter "github.com/moby/buildkit/exporter/containerimage"
 	"github.com/moby/buildkit/exporter/containerimage/exptypes"
+	"github.com/moby/buildkit/session"
 	"github.com/moby/buildkit/source"
 	"github.com/moby/buildkit/source/containerimage"
 	"github.com/moby/buildkit/util/imageutil"
-	"github.com/moby/buildkit/util/pull"
+	"github.com/moby/buildkit/util/resolver"
 )
 
 // Pull retrieves an image from a remote registry.
-func (c *Client) Pull(ctx context.Context, image string, insecure bool) (*ListedImage, error) {
+func (c *Client) Pull(ctx context.Context, image string, insecure bool, group session.Group, sessionId string) (*ListedImage, error) {
 	sm, err := c.getSessionManager()
 	if err != nil {
 		return nil, err
@@ -80,7 +81,8 @@ func (c *Client) Pull(ctx context.Context, image string, insecure bool) (*Listed
 	_, configBytes, err := imageutil.Config(
 		ctx,
 		image,
-		pull.NewResolver(ctx, opt.RegistryHosts, sm, opt.ImageStore, source.ResolveModeDefault, image),
+		resolver.DefaultPool.GetResolver(opt.RegistryHosts, image, "pull", sm, group).WithImageStore(opt.ImageStore, source.ResolveModeDefault),
+		//pull.NewResolver(ctx, opt.RegistryHosts, sm, opt.ImageStore, source.ResolveModeDefault, image),
 		opt.ContentStore,
 		opt.LeaseManager,
 		nil,
@@ -89,11 +91,11 @@ func (c *Client) Pull(ctx context.Context, image string, insecure bool) (*Listed
 		return nil, err
 	}
 
-	s, err := src.Resolve(ctx, identifier, sm)
+	s, err := src.Resolve(ctx, identifier, sm, nil)
 	if err != nil {
 		return nil, err
 	}
-	ref, err := s.Snapshot(ctx)
+	ref, err := s.Snapshot(ctx, group)
 	if err != nil {
 		return nil, err
 	}
@@ -128,7 +130,7 @@ func (c *Client) Pull(ctx context.Context, image string, insecure bool) (*Listed
 			// This sets the image config to preserve entrypoint, workingdir, etc.
 			exptypes.ExporterImageConfigKey: configBytes,
 		},
-	}); err != nil {
+	}, sessionId); err != nil {
 		return nil, err
 	}
 	// Get the image.

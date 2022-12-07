@@ -6,7 +6,6 @@ import (
 
 	"github.com/containerd/containerd/namespaces"
 	"github.com/genuinetools/img/client"
-	"github.com/moby/buildkit/session"
 	"github.com/moby/buildkit/util/appcontext"
 	"golang.org/x/sync/errgroup"
 )
@@ -71,7 +70,6 @@ func (cmd *pushCommand) Run(args []string) (err error) {
 	if err != nil {
 		return err
 	}
-	ctx = session.NewContext(ctx, sess.ID())
 	ctx = namespaces.WithNamespace(ctx, "buildkit")
 	eg, ctx := errgroup.WithContext(ctx)
 
