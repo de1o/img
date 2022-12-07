@@ -6,8 +6,8 @@ import (
 	"os"
 	"path/filepath"
 
-	fuseoverlayfs "github.com/AkihiroSuda/containerd-fuse-overlayfs"
 	"github.com/containerd/containerd/snapshots/overlay"
+	fuseoverlayfs "github.com/containerd/fuse-overlayfs-snapshotter"
 	"github.com/genuinetools/img/types"
 	"github.com/moby/buildkit/control"
 	"github.com/moby/buildkit/session"

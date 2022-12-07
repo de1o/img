@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 	"syscall"
 
-	fuseoverlayfs "github.com/AkihiroSuda/containerd-fuse-overlayfs"
 	"github.com/containerd/containerd/content/local"
 	"github.com/containerd/containerd/diff/apply"
 	"github.com/containerd/containerd/diff/walking"
@@ -17,6 +16,7 @@ import (
 	ctdsnapshot "github.com/containerd/containerd/snapshots"
 	"github.com/containerd/containerd/snapshots/native"
 	"github.com/containerd/containerd/snapshots/overlay"
+	fuseoverlayfs "github.com/containerd/fuse-overlayfs-snapshotter"
 	"github.com/genuinetools/img/types"
 	"github.com/moby/buildkit/cache/metadata"
 	"github.com/moby/buildkit/executor"

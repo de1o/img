@@ -2,14 +2,12 @@ module github.com/genuinetools/img
 
 go 1.13
 
-replace github.com/hashicorp/go-immutable-radix => github.com/tonistiigi/go-immutable-radix v0.0.0-20170803185627-826af9ccf0fe
-
 replace github.com/jaguilar/vt100 => github.com/tonistiigi/vt100 v0.0.0-20190402012908-ad4c4a574305
 
 require (
-	github.com/AkihiroSuda/containerd-fuse-overlayfs v1.0.0
 	github.com/containerd/console v1.0.3
-	github.com/containerd/containerd v1.6.1
+	github.com/containerd/containerd v1.6.9
+	github.com/containerd/fuse-overlayfs-snapshotter v1.0.5
 	github.com/containerd/go-runc v1.0.0
 	github.com/cyphar/filepath-securejoin v0.2.3
 	github.com/docker/cli v20.10.12+incompatible
@@ -24,14 +22,12 @@ require (
 	github.com/opencontainers/image-spec v1.0.3-0.20211202183452-c5a74bcca799
 	github.com/opencontainers/runc v1.1.2
 	github.com/pkg/errors v0.9.1
-	github.com/sirupsen/logrus v1.8.1
+	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/cobra v1.1.3
 	go.etcd.io/bbolt v1.3.6
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
-	google.golang.org/grpc v1.47.0
+	google.golang.org/grpc v1.50.1
 )
-
-replace github.com/containerd/containerd => github.com/containerd/containerd v1.6.11
 
 replace (
 	github.com/docker/cli => github.com/docker/cli v20.10.3-0.20221124184145-c0fa00e6142d+incompatible // v23.0.0-dev
