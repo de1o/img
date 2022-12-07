@@ -12,7 +12,7 @@ import (
 )
 
 // Push sends an image to a remote registry.
-func (c *Client) Push(ctx context.Context, image string, insecure bool) error {
+func (c *Client) Push(ctx context.Context, image string, insecure bool, sessionId string) error {
 	// Parse the image name and tag.
 	named, err := reference.ParseNormalizedNamed(image)
 	if err != nil {
@@ -38,7 +38,9 @@ func (c *Client) Push(ctx context.Context, image string, insecure bool) error {
 		return err
 	}
 
-	if err := push.Push(ctx, sm, opt.ContentStore, imgObj.Target.Digest, image, insecure, opt.RegistryHosts, false); err != nil {
+	// ctx context.Context, sm *session.Manager, sid string, provider content.Provider, manager content.Manager,
+	// dgst digest.Digest, ref string, insecure bool, hosts docker.RegistryHosts, byDigest bool, annotations map[digest.Digest]map[string]string
+	if err := push.Push(ctx, sm, sessionId, opt.ContentStore.Provider, opt.ContentStore.Manager, imgObj.Target.Digest, image, insecure, opt.RegistryHosts, false, nil); err != nil {
 		if !isErrHTTPResponseToHTTPSClient(err) {
 			return errors.Wrapf(err, "not http response to https client")
 		}
@@ -47,7 +49,7 @@ func (c *Client) Push(ctx context.Context, image string, insecure bool) error {
 			return errors.Wrapf(err, "push failed, try --insecure")
 		}
 
-		return push.Push(ctx, sm, opt.ContentStore, imgObj.Target.Digest, image, insecure, registryHostsWithPlainHTTP(), false)
+		return push.Push(ctx, sm, sessionId, opt.ContentStore.Provider, opt.ContentStore.Manager, imgObj.Target.Digest, image, insecure, registryHostsWithPlainHTTP(), false, nil)
 	}
 	return nil
 }

@@ -78,7 +78,7 @@ func (cmd *pushCommand) Run(args []string) (err error) {
 	})
 	eg.Go(func() error {
 		defer sess.Close()
-		return c.Push(ctx, cmd.image, cmd.insecure)
+		return c.Push(ctx, cmd.image, cmd.insecure, sess.ID())
 	})
 	if err := eg.Wait(); err != nil {
 		return err
