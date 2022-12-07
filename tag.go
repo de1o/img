@@ -8,7 +8,6 @@ import (
 	"github.com/containerd/containerd/namespaces"
 	"github.com/genuinetools/img/client"
 	"github.com/moby/buildkit/identity"
-	"github.com/moby/buildkit/session"
 )
 
 const tagUsageShortHelp = `Create a tag TARGET_IMAGE that refers to SOURCE_IMAGE.`
@@ -55,7 +54,7 @@ func (cmd *tagCommand) Run(args []string) (err error) {
 
 	// Create the context.
 	id := identity.NewID()
-	ctx := session.NewContext(context.Background(), id)
+	ctx := client.NewContext(context.Background(), id)
 	ctx = namespaces.WithNamespace(ctx, "buildkit")
 
 	// Create the client.

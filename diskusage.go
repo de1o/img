@@ -12,7 +12,6 @@ import (
 	"github.com/genuinetools/img/client"
 	controlapi "github.com/moby/buildkit/api/services/control"
 	"github.com/moby/buildkit/identity"
-	"github.com/moby/buildkit/session"
 )
 
 const diskUsageShortHelp = `Show image disk usage.`
@@ -53,7 +52,7 @@ func (cmd *diskUsageCommand) Run(args []string) (err error) {
 
 	// Create the context.
 	id := identity.NewID()
-	ctx := session.NewContext(context.Background(), id)
+	ctx := client.NewContext(context.Background(), id)
 	ctx = namespaces.WithNamespace(ctx, "buildkit")
 
 	// Create the client.

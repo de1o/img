@@ -11,7 +11,6 @@ import (
 	"github.com/docker/go-units"
 	"github.com/genuinetools/img/client"
 	"github.com/moby/buildkit/identity"
-	"github.com/moby/buildkit/session"
 )
 
 const pruneUsageShortHelp = `Prune and clean up the build cache.`
@@ -42,7 +41,7 @@ func (cmd *pruneCommand) Run(args []string) (err error) {
 
 	// Create the context.
 	id := identity.NewID()
-	ctx := session.NewContext(context.Background(), id)
+	ctx := client.NewContext(context.Background(), id)
 	ctx = namespaces.WithNamespace(ctx, "buildkit")
 
 	// Create the client.
