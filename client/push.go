@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 	"fmt"
+	"github.com/moby/buildkit/util/contentutil"
 	"github.com/pkg/errors"
 	"strings"
 
@@ -40,7 +41,10 @@ func (c *Client) Push(ctx context.Context, image string, insecure bool, sessionI
 
 	// ctx context.Context, sm *session.Manager, sid string, provider content.Provider, manager content.Manager,
 	// dgst digest.Digest, ref string, insecure bool, hosts docker.RegistryHosts, byDigest bool, annotations map[digest.Digest]map[string]string
-	if err := push.Push(ctx, sm, sessionId, opt.ContentStore.Provider, opt.ContentStore.Manager, imgObj.Target.Digest, image, insecure, opt.RegistryHosts, false, nil); err != nil {
+	if err := push.Push(ctx, sm, sessionId,
+		contentutil.NewMultiProvider(opt.ContentStore),
+		opt.ContentStore,
+		imgObj.Target.Digest, image, insecure, opt.RegistryHosts, false, nil); err != nil {
 		if !isErrHTTPResponseToHTTPSClient(err) {
 			return errors.Wrapf(err, "not http response to https client")
 		}
@@ -49,7 +53,7 @@ func (c *Client) Push(ctx context.Context, image string, insecure bool, sessionI
 			return errors.Wrapf(err, "push failed, try --insecure")
 		}
 
-		return push.Push(ctx, sm, sessionId, opt.ContentStore.Provider, opt.ContentStore.Manager, imgObj.Target.Digest, image, insecure, registryHostsWithPlainHTTP(), false, nil)
+		return push.Push(ctx, sm, sessionId, contentutil.NewMultiProvider(opt.ContentStore), opt.ContentStore, imgObj.Target.Digest, image, insecure, registryHostsWithPlainHTTP(), false, nil)
 	}
 	return nil
 }
