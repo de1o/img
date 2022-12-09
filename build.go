@@ -201,6 +201,8 @@ func (cmd *buildCommand) Run(args []string) (err error) {
 	platforms := strings.Join(cmd.platforms.GetAll(), ",")
 
 	// Create the client.
+
+	fmt.Fprintf(os.Stderr, "Building with backend %s\n", backend)
 	c, err := client.New(stateDir, backend, cmd.getLocalDirs())
 	if err != nil {
 		return err
