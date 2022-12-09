@@ -373,8 +373,9 @@ func inlineCache(ctx context.Context, e remotecache.Exporter, res solver.CachedR
 	if err != nil || len(remotes) == 0 {
 		return nil, nil
 	}
-	remote := remotes[0]
 	t1 = ShowTimeDelta(t1, "get remotes of workerref", f)
+	remote := remotes[0]
+	t1 = ShowTimeDelta(t1, "get remotes of workerref of zero index", f)
 
 	digests := make([]digest.Digest, 0, len(remote.Descriptors))
 	for _, desc := range remote.Descriptors {
