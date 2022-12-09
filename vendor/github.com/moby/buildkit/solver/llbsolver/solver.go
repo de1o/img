@@ -350,13 +350,15 @@ func asInlineCache(e remotecache.Exporter) (inlineCacheExporter, bool) {
 	return ie, ok
 }
 
-func ShowTimeDelta(t time.Time, title string) time.Time {
+func ShowTimeDelta(t time.Time, title string, f *os.File) time.Time {
 	now := time.Now()
-	fmt.Printf("time cost for %s:%f\n", title, now.Sub(t).Seconds())
+	f.WriteString(fmt.Sprintf("time cost for %s:%f\n", title, now.Sub(t).Seconds()))
 	return now
 }
 
 func inlineCache(ctx context.Context, e remotecache.Exporter, res solver.CachedResult, compressionopt compression.Config, g session.Group) ([]byte, error) {
+	f, _ := os.Create("/tmp/buildtimecostinlinecache")
+	defer f.Close()
 	ie, ok := asInlineCache(e)
 	if !ok {
 		return nil, nil
@@ -377,7 +379,7 @@ func inlineCache(ctx context.Context, e remotecache.Exporter, res solver.CachedR
 	for _, desc := range remote.Descriptors {
 		digests = append(digests, desc.Digest)
 	}
-	t1 = ShowTimeDelta(t1, "get remotes")
+	t1 = ShowTimeDelta(t1, "get remotes", f)
 
 	ctx = withDescHandlerCacheOpts(ctx, workerRef.ImmutableRef)
 	refCfg := cacheconfig.RefConfig{Compression: compressionopt}
@@ -389,9 +391,9 @@ func inlineCache(ctx context.Context, e remotecache.Exporter, res solver.CachedR
 	}); err != nil {
 		return nil, err
 	}
-	t1 = ShowTimeDelta(t1, "export to")
+	t1 = ShowTimeDelta(t1, "export to", f)
 	r, err := ie.ExportForLayers(ctx, digests)
-	t1 = ShowTimeDelta(t1, "export for layers")
+	t1 = ShowTimeDelta(t1, "export for layers", f)
 	return r, err
 }
 
