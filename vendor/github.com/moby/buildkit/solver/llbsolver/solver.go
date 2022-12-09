@@ -350,6 +350,12 @@ func asInlineCache(e remotecache.Exporter) (inlineCacheExporter, bool) {
 	return ie, ok
 }
 
+func ShowTimeDelta(t time.Time, title string) time.Time {
+	now := time.Now()
+	fmt.Printf("time cost for %s:%f\n", title, now.Sub(t).Seconds())
+	return now
+}
+
 func inlineCache(ctx context.Context, e remotecache.Exporter, res solver.CachedResult, compressionopt compression.Config, g session.Group) ([]byte, error) {
 	ie, ok := asInlineCache(e)
 	if !ok {
@@ -359,6 +365,7 @@ func inlineCache(ctx context.Context, e remotecache.Exporter, res solver.CachedR
 	if !ok {
 		return nil, errors.Errorf("invalid reference: %T", res.Sys())
 	}
+	t1 := time.Now()
 
 	remotes, err := workerRef.GetRemotes(ctx, true, cacheconfig.RefConfig{Compression: compressionopt}, false, g)
 	if err != nil || len(remotes) == 0 {
@@ -370,6 +377,7 @@ func inlineCache(ctx context.Context, e remotecache.Exporter, res solver.CachedR
 	for _, desc := range remote.Descriptors {
 		digests = append(digests, desc.Digest)
 	}
+	t1 = ShowTimeDelta(t1, "get remotes")
 
 	ctx = withDescHandlerCacheOpts(ctx, workerRef.ImmutableRef)
 	refCfg := cacheconfig.RefConfig{Compression: compressionopt}
@@ -381,7 +389,10 @@ func inlineCache(ctx context.Context, e remotecache.Exporter, res solver.CachedR
 	}); err != nil {
 		return nil, err
 	}
-	return ie.ExportForLayers(ctx, digests)
+	t1 = ShowTimeDelta(t1, "export to")
+	r, err := ie.ExportForLayers(ctx, digests)
+	t1 = ShowTimeDelta(t1, "export for layers")
+	return r, err
 }
 
 func withDescHandlerCacheOpts(ctx context.Context, ref cache.ImmutableRef) context.Context {
