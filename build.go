@@ -294,26 +294,28 @@ func (cmd *buildCommand) Run(args []string) (err error) {
 
 	//create cacheTo list for buildlkit's export-cache
 	var cacheToList []*controlapi.CacheOptionsEntry
-	if cmdCacheToList := cmd.cacheTo.GetAll(); len(cmdCacheToList) > 0 {
-		parsedCacheToList, err := build.ParseExportCache(cmdCacheToList, []string{})
-		if err != nil {
-			return fmt.Errorf("error parsing export cache: %v", err)
-		}
+	if !cmd.noCache { //if no-cache is set, don't use cache-to
+		if cmdCacheToList := cmd.cacheTo.GetAll(); len(cmdCacheToList) > 0 {
+			parsedCacheToList, err := build.ParseExportCache(cmdCacheToList, []string{})
+			if err != nil {
+				return fmt.Errorf("error parsing export cache: %v", err)
+			}
 
-		for _, cacheToItem := range parsedCacheToList {
+			for _, cacheToItem := range parsedCacheToList {
+				cacheToList = append(cacheToList, &controlapi.CacheOptionsEntry{
+					Type:  cacheToItem.Type,
+					Attrs: cacheToItem.Attrs,
+				})
+			}
+		} else {
 			cacheToList = append(cacheToList, &controlapi.CacheOptionsEntry{
-				Type:  cacheToItem.Type,
-				Attrs: cacheToItem.Attrs,
+				Type: "inline",
+				Attrs: map[string]string{
+					"compression": "uncompressed",
+					"mode":        "max",
+				},
 			})
 		}
-	} else {
-		cacheToList = append(cacheToList, &controlapi.CacheOptionsEntry{
-			Type: "inline",
-			Attrs: map[string]string{
-				"compression": "uncompressed",
-				"mode":        "max",
-			},
-		})
 	}
 
 	//create cacheFrom list for buildlkit's import-cache
