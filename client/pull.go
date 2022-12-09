@@ -10,6 +10,7 @@ import (
 	imageexporter "github.com/moby/buildkit/exporter/containerimage"
 	"github.com/moby/buildkit/exporter/containerimage/exptypes"
 	"github.com/moby/buildkit/session"
+	"github.com/moby/buildkit/solver/llbsolver"
 	"github.com/moby/buildkit/source"
 	"github.com/moby/buildkit/source/containerimage"
 	"github.com/moby/buildkit/util/imageutil"
@@ -91,7 +92,8 @@ func (c *Client) Pull(ctx context.Context, image string, insecure bool, group se
 		return nil, err
 	}
 
-	s, err := src.Resolve(ctx, identifier, sm, nil)
+	vtx := llbsolver.NewEmptyVertex()
+	s, err := src.Resolve(ctx, identifier, sm, vtx)
 	if err != nil {
 		return nil, err
 	}

@@ -185,6 +185,10 @@ func newVertex(dgst digest.Digest, op *pb.Op, opMeta *pb.OpMetadata, load func(d
 	return vtx, nil
 }
 
+func NewEmptyVertex() *vertex {
+	return &vertex{}
+}
+
 // loadLLB loads LLB.
 // fn is executed sequentially.
 func loadLLB(def *pb.Definition, fn func(digest.Digest, *pb.Op, func(digest.Digest) (solver.Vertex, error)) (solver.Vertex, error)) (solver.Edge, error) {

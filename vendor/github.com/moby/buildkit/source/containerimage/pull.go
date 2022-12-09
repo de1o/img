@@ -99,7 +99,7 @@ func (is *Source) ResolveImageConfig(ctx context.Context, ref string, opt llb.Re
 	return typed.dgst, typed.dt, nil
 }
 
-func (is *Source) Resolve(ctx context.Context, id source.Identifier, sm *session.Manager, vtx *solver.Vertex) (source.SourceInstance, error) {
+func (is *Source) Resolve(ctx context.Context, id source.Identifier, sm *session.Manager, vtx solver.Vertex) (source.SourceInstance, error) {
 	imageIdentifier, ok := id.(*source.ImageIdentifier)
 	if !ok {
 		return nil, errors.Errorf("invalid image identifier %v", id)
@@ -139,7 +139,7 @@ type puller struct {
 	Ref            string
 	SessionManager *session.Manager
 	id             *source.ImageIdentifier
-	vtx            *solver.Vertex
+	vtx            solver.Vertex
 
 	g                flightcontrol.Group
 	cacheKeyErr      error
