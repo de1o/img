@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"github.com/moby/buildkit/util/bklog"
+	"os"
 	"strings"
 	"time"
 
@@ -245,7 +245,12 @@ func (s *Solver) Solve(ctx context.Context, id string, sessionID string, req fro
 					}
 				}
 				t2 := time.Now()
-				bklog.G(ctx).Infof("inlinecache cost: %f", t2.Sub(t1).Seconds())
+
+				// 将耗时写入 /tmp/buildtimecost
+				tc := t2.Sub(t1).Seconds()
+				f, _ := os.Create("/tmp/buildtimecost")
+				defer f.Close()
+				_, _ = f.WriteString(fmt.Sprintf("inlinecache cost: %f\n", tc))
 
 				for k, res := range crMap {
 					t3 := time.Now()
@@ -257,7 +262,8 @@ func (s *Solver) Solve(ctx context.Context, id string, sessionID string, req fro
 						inp.Metadata[fmt.Sprintf("%s/%s", exptypes.ExporterInlineCache, k)] = dtic
 					}
 					t4 := time.Now()
-					bklog.G(ctx).Infof("inline cache of crMap cost: %f", t4.Sub(t3).Seconds())
+					tc = t4.Sub(t3).Seconds()
+					_, _ = f.WriteString(fmt.Sprintf("inlinecache cost in crMap: %f\n", tc))
 				}
 				exp.CacheExporter = nil
 				return nil
