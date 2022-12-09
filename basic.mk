@@ -45,7 +45,7 @@ build: prebuild $(NAME) ## Builds a dynamic executable or package.
 
 $(NAME): $(wildcard *.go) $(wildcard */*.go) VERSION.txt
 	@echo "+ $@"
-	$(GO) build -tags "$(BUILDTAGS)" ${GO_LDFLAGS} -o $(NAME) .
+	$(GO) build -mod=vendor -tags "$(BUILDTAGS)" ${GO_LDFLAGS} -o $(NAME) .
 
 .PHONY: static
 static: prebuild ## Builds a static executable.
