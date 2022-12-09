@@ -374,12 +374,14 @@ func inlineCache(ctx context.Context, e remotecache.Exporter, res solver.CachedR
 		return nil, nil
 	}
 	remote := remotes[0]
+	t1 = ShowTimeDelta(t1, "get remotes of workerref", f)
 
 	digests := make([]digest.Digest, 0, len(remote.Descriptors))
 	for _, desc := range remote.Descriptors {
 		digests = append(digests, desc.Digest)
 	}
-	t1 = ShowTimeDelta(t1, "get remotes", f)
+	s := fmt.Sprintf("get remotes apend: %d", len(digests))
+	t1 = ShowTimeDelta(t1, s, f)
 
 	ctx = withDescHandlerCacheOpts(ctx, workerRef.ImmutableRef)
 	refCfg := cacheconfig.RefConfig{Compression: compressionopt}
