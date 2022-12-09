@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"github.com/moby/buildkit/util/bklog"
 	"strings"
 	"time"
 
@@ -232,6 +233,8 @@ func (s *Solver) Solve(ctx context.Context, id string, sessionID string, req fro
 		}
 		if _, ok := asInlineCache(exp.CacheExporter); ok {
 			if err := inBuilderContext(ctx, j, "preparing layers for inline cache", "", func(ctx context.Context, _ session.Group) error {
+				// 计算下一个代码块的执行时长
+				t1 := time.Now()
 				if cr != nil {
 					dtic, err := inlineCache(ctx, exp.CacheExporter, cr, e.Config().Compression, session.NewGroup(sessionID))
 					if err != nil {
@@ -241,7 +244,11 @@ func (s *Solver) Solve(ctx context.Context, id string, sessionID string, req fro
 						inp.Metadata[exptypes.ExporterInlineCache] = dtic
 					}
 				}
+				t2 := time.Now()
+				bklog.G(ctx).Infof("inlinecache cost: %f", t2.Sub(t1).Seconds())
+
 				for k, res := range crMap {
+					t3 := time.Now()
 					dtic, err := inlineCache(ctx, exp.CacheExporter, res, e.Config().Compression, session.NewGroup(sessionID))
 					if err != nil {
 						return err
@@ -249,6 +256,8 @@ func (s *Solver) Solve(ctx context.Context, id string, sessionID string, req fro
 					if dtic != nil {
 						inp.Metadata[fmt.Sprintf("%s/%s", exptypes.ExporterInlineCache, k)] = dtic
 					}
+					t4 := time.Now()
+					bklog.G(ctx).Infof("inline cache of crMap cost: %f", t4.Sub(t3).Seconds())
 				}
 				exp.CacheExporter = nil
 				return nil
