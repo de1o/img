@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"os"
 	"strings"
+	"time"
 
 	"github.com/containerd/containerd/content"
 	"github.com/containerd/containerd/errdefs"
@@ -34,11 +36,16 @@ type Unlazier interface {
 // appended to the result.
 // Note: Use WorkerRef.GetRemotes instead as moby integration requires custom GetRemotes implementation.
 func (sr *immutableRef) GetRemotes(ctx context.Context, createIfNeeded bool, refCfg config.RefConfig, all bool, s session.Group) ([]*solver.Remote, error) {
+	f, _ := os.Create("/tmp/buildtimecostgetremotes")
+	defer f.Close()
+	t1 := time.Now()
 	ctx, done, err := leaseutil.WithLease(ctx, sr.cm.LeaseManager, leaseutil.MakeTemporary)
 	if err != nil {
 		return nil, err
 	}
 	defer done(ctx)
+	t2 := time.Now()
+	f.WriteString(fmt.Sprintf("get remotes 1: %f", t2.Sub(t1).Seconds()))
 
 	// fast path if compression variants aren't required
 	// NOTE: compressionopt is applied only to *newly created layers* if Force != true.
@@ -49,6 +56,8 @@ func (sr *immutableRef) GetRemotes(ctx context.Context, createIfNeeded bool, ref
 	if !all || refCfg.Compression.Force || len(remote.Descriptors) == 0 {
 		return []*solver.Remote{remote}, nil // early return if compression variants aren't required
 	}
+	t3 := time.Now()
+	f.WriteString(fmt.Sprintf("get remotes 2: %f", t3.Sub(t2).Seconds()))
 
 	// Search all available remotes that has the topmost blob with the specified
 	// compression with all combination of copmressions
@@ -58,6 +67,8 @@ func (sr *immutableRef) GetRemotes(ctx context.Context, createIfNeeded bool, ref
 	if err != nil {
 		return res, nil // compression variant doesn't exist. return the main blob only.
 	}
+	t4 := time.Now()
+	f.WriteString(fmt.Sprintf("get remotes 3: %f", t4.Sub(t3).Seconds()))
 
 	var variants []*solver.Remote
 	if len(parentChain) == 0 {
@@ -76,6 +87,8 @@ func (sr *immutableRef) GetRemotes(ctx context.Context, createIfNeeded bool, ref
 		}
 		variants = appendRemote(parents, vDesc, sr.cm.ContentStore)
 	}
+	t5 := time.Now()
+	f.WriteString(fmt.Sprintf("get remotes 4: %f", t5.Sub(t4).Seconds()))
 
 	// Return the main remote and all its compression variants.
 	// NOTE: Because compressionopt is applied only to *newly created layers* in the main remote (i.e. res[0]),

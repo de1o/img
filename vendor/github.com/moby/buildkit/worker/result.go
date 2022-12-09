@@ -33,27 +33,33 @@ func (wr *WorkerRef) ID() string {
 // This is needed for moby integration.
 // Use this method instead of calling ImmutableRef.GetRemotes() directly.
 func (wr *WorkerRef) GetRemotes(ctx context.Context, createIfNeeded bool, refCfg cacheconfig.RefConfig, all bool, g session.Group) ([]*solver.Remote, error) {
+	f, _ := os.Create("/tmp/buildtimecostinlinecachegetremote0")
+	defer f.Close()
+	t1 := time.Now()
+
 	if w, ok := wr.Worker.(interface {
 		GetRemotes(context.Context, cache.ImmutableRef, bool, cacheconfig.RefConfig, bool, session.Group) ([]*solver.Remote, error)
 	}); ok {
-		f, _ := os.Create("/tmp/buildtimecostinlinecachegetremote1")
-		defer f.Close()
-		t1 := time.Now()
+		f3, _ := os.Create("/tmp/buildtimecostinlinecachegetremote1")
+		defer f3.Close()
+		t5 := time.Now()
 		r, e := w.GetRemotes(ctx, wr.ImmutableRef, createIfNeeded, refCfg, all, g)
-		t2 := time.Now()
-		f.WriteString(fmt.Sprintf("get remotes inner: %f", t2.Sub(t1).Seconds()))
+		t6 := time.Now()
+		f3.WriteString(fmt.Sprintf("get remotes inner: %f", t6.Sub(t5).Seconds()))
 		return r, e
 	}
 	if wr.ImmutableRef == nil {
 		return nil, nil
 	}
-
-	f, _ := os.Create("/tmp/buildtimecostinlinecachegetremote2")
-	defer f.Close()
-	t1 := time.Now()
-	r, e := wr.ImmutableRef.GetRemotes(ctx, createIfNeeded, refCfg, all, g)
 	t2 := time.Now()
-	f.WriteString(fmt.Sprintf("get remotes of immutable ref: %f", t2.Sub(t1).Seconds()))
+	f.WriteString(fmt.Sprintf("get remotes inner: %f", t2.Sub(t1).Seconds()))
+
+	f2, _ := os.Create("/tmp/buildtimecostinlinecachegetremote2")
+	defer f2.Close()
+	t3 := time.Now()
+	r, e := wr.ImmutableRef.GetRemotes(ctx, createIfNeeded, refCfg, all, g)
+	t4 := time.Now()
+	f2.WriteString(fmt.Sprintf("get remotes of immutable ref: %f", t4.Sub(t3).Seconds()))
 	return r, e
 }
 
