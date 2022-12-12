@@ -59,7 +59,8 @@ func (c *Client) ListImages(ctx context.Context, filters ...string) ([]ListedIma
 	for _, image := range i {
 		size, err := image.Size(ctx, contentStore, platforms.Default())
 		if err != nil {
-			return nil, fmt.Errorf("calculating size of image %s failed: %v", image.Name, err)
+			fmt.Errorf("calculating size of image %s failed: %v", image.Name, err)
+			//return nil, fmt.Errorf("calculating size of image %s failed: %v", image.Name, err)
 		}
 		listedImages = append(listedImages, ListedImage{Image: image, ContentSize: size})
 	}
