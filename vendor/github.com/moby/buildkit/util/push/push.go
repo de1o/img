@@ -46,6 +46,7 @@ func Pusher(ctx context.Context, resolver remotes.Resolver, ref string) (remotes
 }
 
 func Push(ctx context.Context, sm *session.Manager, sid string, provider content.Provider, manager content.Manager, dgst digest.Digest, ref string, insecure bool, hosts docker.RegistryHosts, byDigest bool, annotations map[digest.Digest]map[string]string) error {
+	fmt.Printf("Pushing %s to %s", dgst, ref)
 	desc := ocispecs.Descriptor{
 		Digest: dgst,
 	}
@@ -82,6 +83,7 @@ func Push(ctx context.Context, sm *session.Manager, sid string, provider content
 	}
 
 	resolver := resolver.DefaultPool.GetResolver(hosts, ref, scope, sm, session.NewGroup(sid))
+	fmt.Printf("resolver builded: %+v")
 
 	pusher, err := Pusher(ctx, resolver, ref)
 	if err != nil {
@@ -103,28 +105,33 @@ func Push(ctx context.Context, sm *session.Manager, sid string, provider content
 			return nil, nil
 		}
 	})
+	fmt.Printf("filterHandler builded: %+v")
 
 	pushHandler := retryhandler.New(limited.PushHandler(pusher, provider, ref), logs.LoggerFromContext(ctx))
 	pushUpdateSourceHandler, err := updateDistributionSourceHandler(manager, pushHandler, ref)
 	if err != nil {
 		return err
 	}
+	fmt.Printf("pushHandler builded: %+v")
 
 	handlers := append([]images.Handler{},
 		images.HandlerFunc(annotateDistributionSourceHandler(manager, annotations, childrenHandler(provider))),
 		filterHandler,
 		dedupeHandler(pushUpdateSourceHandler),
 	)
+	fmt.Printf("handlers builded: %+v")
 
 	ra, err := provider.ReaderAt(ctx, desc)
 	if err != nil {
 		return err
 	}
+	fmt.Printf("ra builded: %+v")
 
 	mtype, err := imageutil.DetectManifestMediaType(ra)
 	if err != nil {
 		return err
 	}
+	fmt.Printf("mtype builded: %+v")
 
 	layersDone := oneOffProgress(ctx, "pushing layers")
 	err = images.Dispatch(ctx, skipNonDistributableBlobs(images.Handlers(handlers...)), nil, ocispecs.Descriptor{
@@ -135,6 +142,8 @@ func Push(ctx context.Context, sm *session.Manager, sid string, provider content
 	if err := layersDone(err); err != nil {
 		return err
 	}
+
+	fmt.Printf("layersDone builded: %+v")
 
 	mfstDone := oneOffProgress(ctx, fmt.Sprintf("pushing manifest for %s", ref))
 	for i := len(manifestStack) - 1; i >= 0; i-- {

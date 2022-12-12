@@ -41,10 +41,12 @@ func (c *Client) Push(ctx context.Context, image string, insecure bool, sessionI
 
 	// ctx context.Context, sm *session.Manager, sid string, provider content.Provider, manager content.Manager,
 	// dgst digest.Digest, ref string, insecure bool, hosts docker.RegistryHosts, byDigest bool, annotations map[digest.Digest]map[string]string
+	fmt.Printf("Try to push image %s...\n", image)
 	if err := push.Push(ctx, sm, sessionId,
 		contentutil.NewMultiProvider(opt.ContentStore),
 		opt.ContentStore,
 		imgObj.Target.Digest, image, insecure, opt.RegistryHosts, false, nil); err != nil {
+		fmt.Printf("Push image %s failed: %v\n", image, err)
 		if !isErrHTTPResponseToHTTPSClient(err) {
 			return errors.Wrapf(err, "not http response to https client")
 		}
