@@ -309,14 +309,6 @@ func (cmd *buildCommand) Run(args []string) (err error) {
 					Attrs: cacheToItem.Attrs,
 				})
 			}
-		} else {
-			cacheToList = append(cacheToList, &controlapi.CacheOptionsEntry{
-				Type: "inline",
-				Attrs: map[string]string{
-					"compression": "uncompressed",
-					"mode":        "max",
-				},
-			})
 		}
 	}
 
