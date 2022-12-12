@@ -72,6 +72,7 @@ func (c *Client) createWorkerOptInner(withExecutor bool, insecure bool, unprivil
 	} else {
 		unprivileged = false
 	}
+	logrus.Printf("Creating the snapshotter...\n")
 
 	// Create the snapshotter.
 	var (
