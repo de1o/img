@@ -25,6 +25,7 @@ func serve(ctx context.Context, grpcServer *grpc.Server, conn net.Conn) {
 	}()
 	bklog.G(ctx).Debugf("serving grpc connection")
 	(&http2.Server{}).ServeConn(conn, &http2.ServeConnOpts{Handler: grpcServer})
+	bklog.G(ctx).Debugf("serving grpc connection done")
 }
 
 func grpcClientConn(ctx context.Context, conn net.Conn) (context.Context, *grpc.ClientConn, error) {
