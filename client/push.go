@@ -14,6 +14,7 @@ import (
 
 // Push sends an image to a remote registry.
 func (c *Client) Push(ctx context.Context, image string, insecure bool, sessionId string) error {
+	fmt.Printf("Entering Pushing %s...\n", image)
 	// Parse the image name and tag.
 	named, err := reference.ParseNormalizedNamed(image)
 	if err != nil {
@@ -28,11 +29,13 @@ func (c *Client) Push(ctx context.Context, image string, insecure bool, sessionI
 	if err != nil {
 		return fmt.Errorf("creating worker opt failed: %v", err)
 	}
+	fmt.Printf("worker opt created...\n")
 
 	imgObj, err := opt.ImageStore.Get(ctx, image)
 	if err != nil {
 		return fmt.Errorf("getting image %q failed: %v", image, err)
 	}
+	fmt.Printf("image store created...\n")
 
 	sm, err := c.getSessionManager()
 	if err != nil {
