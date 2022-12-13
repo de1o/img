@@ -3,8 +3,6 @@ package client
 import (
 	"context"
 	"fmt"
-	"time"
-
 	controlapi "github.com/moby/buildkit/api/services/control"
 	"github.com/moby/buildkit/client"
 	"github.com/moby/buildkit/worker/base"
@@ -12,7 +10,7 @@ import (
 )
 
 // Prune calls Prune on the worker.
-func (c *Client) Prune(ctx context.Context, keepDuration time.Duration, keepBytes int64) ([]*controlapi.UsageRecord, error) {
+func (c *Client) Prune(ctx context.Context) ([]*controlapi.UsageRecord, error) {
 	ch := make(chan client.UsageInfo)
 
 	// Create the worker opts.
@@ -31,8 +29,9 @@ func (c *Client) Prune(ctx context.Context, keepDuration time.Duration, keepByte
 	eg.Go(func() error {
 		// Call prune on the worker.
 		return w.Prune(ctx, ch, client.PruneInfo{
-			KeepDuration: keepDuration,
-			KeepBytes:    keepBytes,
+			//KeepDuration: keepDuration,
+			//KeepBytes:    keepBytes,
+			Filter: []string{"description~=\"^[^pulled]\""},
 		})
 	})
 

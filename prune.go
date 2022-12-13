@@ -10,7 +10,6 @@ import (
 	"github.com/spf13/cobra"
 	"os"
 	"text/tabwriter"
-	"time"
 )
 
 const pruneUsageShortHelp = `Prune and clean up the build cache.`
@@ -53,7 +52,7 @@ func (cmd *pruneCommand) Run(args []string) (err error) {
 
 	fmt.Println("Pruning...%+v", args)
 	// keep 2days， or 20GB
-	usage, err := c.Prune(ctx, 2*24*time.Hour, 20*units.GiB)
+	usage, err := c.Prune(ctx)
 	if err != nil {
 		return err
 	}
