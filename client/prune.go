@@ -31,7 +31,7 @@ func (c *Client) Prune(ctx context.Context) ([]*controlapi.UsageRecord, error) {
 		return w.Prune(ctx, ch, client.PruneInfo{
 			//KeepDuration: keepDuration,
 			//KeepBytes:    keepBytes,
-			Filter: []string{"description~=\"^[^pulled]\""},
+			Filter: []string{"description~=^[^pulled]"},
 		})
 	})
 
