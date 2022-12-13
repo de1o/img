@@ -1069,7 +1069,6 @@ func (cm *cacheManager) prune(ctx context.Context, ch chan client.UsageInfo, opt
 			continue
 		}
 
-		fmt.Printf("opt.filter: %v", opt.filter)
 		if len(cr.refs) == 0 {
 			recordType := cr.GetRecordType()
 			if recordType == "" {
@@ -1089,10 +1088,11 @@ func (cm *cacheManager) prune(ctx context.Context, ch chan client.UsageInfo, opt
 			}
 
 			c := &client.UsageInfo{
-				ID:         cr.ID(),
-				Mutable:    cr.mutable,
-				RecordType: recordType,
-				Shared:     shared,
+				ID:          cr.ID(),
+				Mutable:     cr.mutable,
+				RecordType:  recordType,
+				Shared:      shared,
+				Description: cr.GetDescription(),
 			}
 
 			usageCount, lastUsedAt := cr.getLastUsed()
@@ -1134,7 +1134,7 @@ func (cm *cacheManager) prune(ctx context.Context, ch chan client.UsageInfo, opt
 		}
 		cr.mu.Unlock()
 	}
-	fmt.Printf("toDelete: %v, opt.filter: %v", toDelete, opt.filter)
+	fmt.Printf("toDelete: %v, opt.filter: %v\n", toDelete, opt.filter)
 
 	if gcMode && len(toDelete) > 0 {
 		sortDeleteRecords(toDelete)
