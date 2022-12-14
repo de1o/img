@@ -57,7 +57,6 @@ func (c *Client) createWorkerOpt(withExecutor bool) (opt base.WorkerOpt, err err
 // createWorkerOpt creates a base.WorkerOpt to be used for a new worker.
 func (c *Client) createWorkerOptInner(withExecutor bool, insecure bool, unprivilegedFlag int) (opt base.WorkerOpt, err error) {
 	// Create the metadata store.
-	logrus.Printf("Creating the metadata store...\n")
 	md, err := metadata.NewStore(filepath.Join(c.root, "metadata.db"))
 	if err != nil {
 		return opt, err
@@ -72,7 +71,6 @@ func (c *Client) createWorkerOptInner(withExecutor bool, insecure bool, unprivil
 	} else {
 		unprivileged = false
 	}
-	logrus.Printf("Creating the snapshotter...\n")
 
 	// Create the snapshotter.
 	var (
@@ -93,7 +91,6 @@ func (c *Client) createWorkerOptInner(withExecutor bool, insecure bool, unprivil
 	if err != nil {
 		return opt, fmt.Errorf("creating %s snapshotter failed: %v", c.backend, err)
 	}
-	logrus.Printf("Created the snapshotter...\n")
 
 	var exe executor.Executor
 	if withExecutor {
@@ -112,7 +109,6 @@ func (c *Client) createWorkerOptInner(withExecutor bool, insecure bool, unprivil
 		if err != nil {
 			return opt, err
 		}
-		logrus.Printf("Created the executor...\n")
 	}
 
 	// Create the content store locally.
@@ -120,14 +116,12 @@ func (c *Client) createWorkerOptInner(withExecutor bool, insecure bool, unprivil
 	if err != nil {
 		return opt, err
 	}
-	logrus.Printf("Created the content store...\n")
 
 	// Open the bolt database for metadata.
 	db, err := bolt.Open(filepath.Join(c.root, "containerdmeta.db"), 0644, nil)
 	if err != nil {
 		return opt, err
 	}
-	logrus.Printf("Opened the bolt database...\n")
 
 	// Create the new database for metadata.
 	mdb := ctdmetadata.NewDB(db, contentStore, map[string]ctdsnapshot.Snapshotter{
@@ -136,14 +130,11 @@ func (c *Client) createWorkerOptInner(withExecutor bool, insecure bool, unprivil
 	if err := mdb.Init(context.TODO()); err != nil {
 		return opt, err
 	}
-	logrus.Printf("Created the metadata database...\n")
 
 	// Create the image store.
 	imageStore := ctdmetadata.NewImageStore(mdb)
-	logrus.Printf("Created the image store...\n")
 
 	contentStore = containerdsnapshot.NewContentStore(mdb.ContentStore(), "buildkit")
-	logrus.Printf("Created the content store...\n")
 
 	id, err := base.ID(c.root)
 	if err != nil {
@@ -180,7 +171,6 @@ func (c *Client) createWorkerOptInner(withExecutor bool, insecure bool, unprivil
 		LeaseManager:   leaseutil.WithNamespace(ctdmetadata.NewLeaseManager(mdb), "buildkit"),
 		GarbageCollect: mdb.GarbageCollect,
 	}
-	logrus.Printf("Created the worker options...\n")
 
 	return opt, err
 }

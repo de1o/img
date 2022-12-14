@@ -1134,7 +1134,6 @@ func (cm *cacheManager) prune(ctx context.Context, ch chan client.UsageInfo, opt
 		}
 		cr.mu.Unlock()
 	}
-	fmt.Printf("toDelete: %v, opt.filter: %v\n", toDelete, opt.filter)
 
 	if gcMode && len(toDelete) > 0 {
 		sortDeleteRecords(toDelete)

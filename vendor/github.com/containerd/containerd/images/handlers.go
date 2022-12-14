@@ -164,7 +164,6 @@ func Dispatch(ctx context.Context, handler Handler, limiter *semaphore.Weighted,
 
 		eg.Go(func() error {
 			desc := desc
-			fmt.Printf("Dispatching %s\n", desc.Digest)
 
 			children, err := handler.Handle(ctx2, desc)
 			if limiter != nil {
