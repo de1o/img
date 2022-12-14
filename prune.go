@@ -50,7 +50,6 @@ func (cmd *pruneCommand) Run(args []string) (err error) {
 	}
 	defer c.Close()
 
-	fmt.Println("Pruning...%+v", args)
 	// keep 2days， or 20GB
 	usage, err := c.Prune(ctx)
 	if err != nil {

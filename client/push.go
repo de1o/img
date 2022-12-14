@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/moby/buildkit/util/contentutil"
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 	"strings"
 
 	"github.com/containerd/containerd/remotes/docker"
@@ -15,7 +14,6 @@ import (
 
 // Push sends an image to a remote registry.
 func (c *Client) Push(ctx context.Context, image string, insecure bool, sessionId string) error {
-	logrus.Printf("Entering Pushing %s...\n", image)
 	// Parse the image name and tag.
 	named, err := reference.ParseNormalizedNamed(image)
 	if err != nil {
@@ -30,13 +28,11 @@ func (c *Client) Push(ctx context.Context, image string, insecure bool, sessionI
 	if err != nil {
 		return fmt.Errorf("creating worker opt failed: %v", err)
 	}
-	logrus.Printf("worker opt created...\n")
 
 	imgObj, err := opt.ImageStore.Get(ctx, image)
 	if err != nil {
 		return fmt.Errorf("getting image %q failed: %v", image, err)
 	}
-	logrus.Printf("image store created...\n")
 
 	sm, err := c.getSessionManager()
 	if err != nil {
@@ -45,12 +41,10 @@ func (c *Client) Push(ctx context.Context, image string, insecure bool, sessionI
 
 	// ctx context.Context, sm *session.Manager, sid string, provider content.Provider, manager content.Manager,
 	// dgst digest.Digest, ref string, insecure bool, hosts docker.RegistryHosts, byDigest bool, annotations map[digest.Digest]map[string]string
-	logrus.Printf("Try to push image %s...\n", image)
 	if err := push.Push(ctx, sm, sessionId,
 		contentutil.NewMultiProvider(opt.ContentStore),
 		opt.ContentStore,
 		imgObj.Target.Digest, image, insecure, opt.RegistryHosts, false, nil); err != nil {
-		logrus.Printf("Push image %s failed: %v\n", image, err)
 		if !isErrHTTPResponseToHTTPSClient(err) {
 			return errors.Wrapf(err, "not http response to https client")
 		}
@@ -74,7 +68,6 @@ func isErrHTTPResponseToHTTPSClient(err error) bool {
 }
 
 func registryHostsWithPlainHTTP() docker.RegistryHosts {
-	logrus.Printf("registry hosts with plain HTTP...\n")
 	return docker.ConfigureDefaultRegistries(docker.WithPlainHTTP(func(_ string) (bool, error) {
 		return true, nil
 	}))
