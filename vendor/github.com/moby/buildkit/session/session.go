@@ -123,7 +123,6 @@ func (s *Session) Run(ctx context.Context, dialer Dialer) error {
 	}
 	s.conn = conn
 	serve(ctx, s.grpcServer, conn)
-	fmt.Print("session served")
 	return nil
 }
 
