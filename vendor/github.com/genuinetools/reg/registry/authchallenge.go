@@ -10,8 +10,9 @@ import (
 )
 
 var (
-	bearerRegex = regexp.MustCompile(
-		`^\s*Bearer\s+(.*)$`)
+	// regex to match *Bear or *bear
+	bearerRegex = regexp.MustCompile(`(?i)^\s*(bearer)\s+(.*)$`)
+
 	basicRegex = regexp.MustCompile(`^\s*Basic\s+.*$`)
 
 	// ErrBasicAuth indicates that the repository requires basic rather than token authentication.
@@ -36,7 +37,7 @@ func parseChallenge(challengeHeader string) (*authService, error) {
 	if d := len(match); d != 1 {
 		return nil, fmt.Errorf("malformed auth challenge header: '%s', %d", challengeHeader, d)
 	}
-	parts := strings.SplitN(strings.TrimSpace(match[0][1]), ",", 3)
+	parts := strings.SplitN(strings.TrimSpace(match[0][2]), ",", 3)
 
 	var realm, service string
 	var scope []string
